@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e793e048283b894e9386a4120e6f935, type: 3}
   m_Name: EnemyConfig
   m_EditorClassIdentifier: 
-  <MoveSpeed>k__BackingField: 5
+  <MoveSpeed>k__BackingField: 2
   <RotationSpeed>k__BackingField: 900
   <StartHealth>k__BackingField: 100
+  <ContactDamage>k__BackingField: 50
   <Prefab>k__BackingField: {fileID: 8730685544322483197, guid: 4165714731c194f49ae0c44a9c7b8748, type: 3}

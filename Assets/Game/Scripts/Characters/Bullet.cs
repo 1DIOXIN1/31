@@ -18,9 +18,9 @@ public class Bullet : MonoBehaviour
         Move(_direction);
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private void OnTriggerEnter(Collider other)
     {
-        if(collision.gameObject.TryGetComponent<IDamagable>(out IDamagable damagable))
+        if(other.TryGetComponent(out IDamagable damagable))
             damagable.TakeDamage(_damage);
     }
 

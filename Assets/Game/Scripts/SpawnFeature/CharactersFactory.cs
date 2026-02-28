@@ -4,33 +4,40 @@ using Object = UnityEngine.Object;
 
 public class CharactersFactory
 {
+    private ControllersUpdateService _controllersUpdateService;
     private ControllersFactory _controllersFactory;
     private EnemiesFactory _enemiesFactory;
 
-    public CharactersFactory(ControllersFactory controllersFactory, EnemiesFactory enemiesFactory)
+    public CharactersFactory(ControllersFactory controllersFactory, ControllersUpdateService controllersUpdateService, EnemiesFactory enemiesFactory)
     {
         _controllersFactory = controllersFactory;
+        _controllersUpdateService = controllersUpdateService;
         _enemiesFactory = enemiesFactory;
     }
 
-    public Player CreatePlayer(PlayerConfig config, Vector3 spawnPosition, float moveSpeed)
+    public Player CreatePlayer(PlayerConfig config, Vector3 spawnPosition)
     {
         Player player = Object.Instantiate(config.Prefab, spawnPosition, Quaternion.identity);
 
-        CharacterController characterController = player.GetComponent<CharacterController>();
+        Rigidbody rigidbody = player.GetComponent<Rigidbody>();
 
-        if(characterController == null) 
+        if(rigidbody == null) 
             throw new InvalidOperationException("Not found mover component");
 
-        DirectionMover mover = new CharacterControllerDirectionMover(characterController, moveSpeed);
+        DirectionMover mover = new RigidbodyDirectionalMover(rigidbody, config.MoveSpeed);
         DirectionRotator rotator = new TransformDirectionRotator(player.transform, config.RotationSpeed);
         Shooter shooter = new Shooter(config.ShooterConfig, _enemiesFactory);
 
         Controller movableController = _controllersFactory.CreatePlayerDirectionMovableController(player);
+        _controllersUpdateService.Add(movableController, () => player.IsDestroyed);
+        
         Controller rotatableController = _controllersFactory.CreatePlayerDirectionRotatableController(player);
-        Controller shooterController = _controllersFactory.CreatePlayerShootForwardController(player);
+        _controllersUpdateService.Add(rotatableController, () => player.IsDestroyed);
 
-        player.Initialize(mover, rotator, shooter);
+        Controller shooterController = _controllersFactory.CreatePlayerShootForwardController(player);
+        _controllersUpdateService.Add(shooterController, () => player.IsDestroyed);
+
+        player.Initialize(config, mover, rotator, shooter);
         
         movableController.Enable();
         rotatableController.Enable();
