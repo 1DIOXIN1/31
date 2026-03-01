@@ -41,6 +41,6 @@ public class Player : MonoDestroyable, IDirectionMovable, IDirectionRotatable, I
     {
         _health.GetIsDead().Changed -= Death;
         
-        Destroy(gameObject);
+        Destroy();
     }
 }

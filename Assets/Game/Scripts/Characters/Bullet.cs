@@ -1,7 +1,8 @@
 using UnityEngine;
 
-public class Bullet : MonoBehaviour
+public class Bullet : MonoDestroyable
 {
+    private float _timeBeforeDestroyed = 2.5f;
     private int _damage;
     private float _moveSpeed;
     private Vector3 _direction;
@@ -11,6 +12,8 @@ public class Bullet : MonoBehaviour
         _direction = direction;
         _moveSpeed = moveSpeed;
         _damage = damage;
+        
+        Invoke(nameof(Destroy), _timeBeforeDestroyed);
     }
 
     private void Update()
@@ -21,7 +24,10 @@ public class Bullet : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if(other.TryGetComponent(out IDamagable damagable))
+        {
             damagable.TakeDamage(_damage);
+            Destroy();
+        }
     }
 
     private void Move(Vector3 direction)

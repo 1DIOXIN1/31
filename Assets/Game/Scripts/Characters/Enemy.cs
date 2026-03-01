@@ -39,6 +39,6 @@ public class Enemy : MonoDestroyable, IDirectionMovable, IDirectionRotatable, ID
     {
         _health.GetIsDead().Changed -= Death;
         
-        Destroy(gameObject);
+        Destroy();
     }
 }
