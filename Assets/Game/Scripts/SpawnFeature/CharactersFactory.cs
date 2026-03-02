@@ -4,6 +4,8 @@ using Object = UnityEngine.Object;
 
 public class CharactersFactory
 {
+    public event Action<Player> PlayerCreated;
+
     private ControllersUpdateService _controllersUpdateService;
     private ControllersFactory _controllersFactory;
     private EnemiesFactory _enemiesFactory;
@@ -42,6 +44,8 @@ public class CharactersFactory
         movableController.Enable();
         rotatableController.Enable();
         shooterController.Enable();
+
+        PlayerCreated?.Invoke(player);
         
         return player;
     }

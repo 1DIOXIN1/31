@@ -1,33 +1,19 @@
 using System;
 using System.Collections.Generic;
 
-public enum VictoryType
-{
-    Time,
-    KillCount
-}
-
-public enum DefeatType
-{
-    EnemyCount,
-    PlayerDestroyed
-}
-
-public class GameMode
+public class GameMode : IGameModeState
 {
     public event Action Win;
     public event Action Defeat;
 
     private LevelConfig _levelConfig;
-    private VictoryType _victoryType;
-    private DefeatType _defeatType;
+    private IGameCondition _winCondition;
+    private IGameCondition _defeatCondition;
     private EnemySpawner _enemySpawner;
     private Player _player;
     private List<Enemy> _spawnedEnemies = new();
 
-    private int _killCount = 0;
     private bool _isRunning = false;
-    private float _time = 0;
     private float _timeLastSpawnEnemies = 0;
 
     public GameMode(LevelConfig levelConfig, EnemySpawner enemySpawner, Player player)
@@ -36,15 +22,22 @@ public class GameMode
         _enemySpawner = enemySpawner;
         _player = player;
 
-        _victoryType = levelConfig.VictoryType;
-        _defeatType = levelConfig.DefeatType;
+        ConditionFactory conditionFactory = new ConditionFactory(_levelConfig);
+
+        _winCondition = conditionFactory.CreateVictoryCondition();
+        _defeatCondition = conditionFactory.CreateDefeatCondition();
     }
+
+    public float Time {get; private set; } = 0;
+    public int KillCount {get; private set; } = 0;
+    public int AliveEnemiesCount => _spawnedEnemies.Count;
+    public bool IsPlayerDestroyed => _player.IsDestroyed;
 
     public void Start()
     {
         ProcessSpawnEnemies(_levelConfig.EnemiesOnStart);
 
-        _killCount = 0;
+        KillCount = 0;
         _isRunning = true;
     }
 
@@ -61,14 +54,14 @@ public class GameMode
 
         ProcessSpawnEnemies(_levelConfig.CountEnemiesToSpawnInCycle);
 
-        _time += deltaTime;
+        Time += deltaTime;
     }
 
     private void ProcessSpawnEnemies(int countSpawnEnemies)
     {
-        if(_time - _timeLastSpawnEnemies>= _levelConfig.EnemiesSpawnCooldown && _spawnedEnemies.Count < _levelConfig.CountEnemiesOnArenaToDefeat)
+        if(Time - _timeLastSpawnEnemies>= _levelConfig.EnemiesSpawnCooldown && _spawnedEnemies.Count < _levelConfig.CountEnemiesOnArenaToDefeat)
         {
-            _timeLastSpawnEnemies = _time;
+            _timeLastSpawnEnemies = Time;
 
             List<Enemy> newSpawnedEnemies = _enemySpawner.Spawn(_levelConfig.EnemyConfig, countSpawnEnemies);
 
@@ -93,31 +86,9 @@ public class GameMode
         Win?.Invoke();
     }
     
-    private bool WinConditionCheck()
-    {
-        switch (_victoryType)
-        {
-            case VictoryType.Time:
-                return _time >= _levelConfig.TimeToWin;
-            case VictoryType.KillCount:
-                return _killCount >= _levelConfig.CountKilledToWin;
-            default:
-                return false;
-        }
-    }
+    private bool WinConditionCheck() => _winCondition.Check(this);
 
-    private bool DefeatConditionCheck()
-    {
-        switch (_defeatType)
-        {
-            case DefeatType.EnemyCount:
-                return _spawnedEnemies.Count >= _levelConfig.CountEnemiesOnArenaToDefeat;
-            case DefeatType.PlayerDestroyed:
-                return _player.IsDestroyed;
-            default:
-                return false;
-        }
-    }
+    private bool DefeatConditionCheck() => _defeatCondition.Check(this);
 
     private void ProcessDefeat()
     {
@@ -134,7 +105,7 @@ public class GameMode
         {
             enemy.Destroyed -= OnEnemyDestroyed;
             _spawnedEnemies.Remove(enemy);
-            _killCount++;
+            KillCount++;
         }
     }
 }

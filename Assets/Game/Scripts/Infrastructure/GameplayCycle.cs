@@ -4,17 +4,10 @@ using UnityEngine;
 public class GameplayCycle : IDisposable
 {
     private GameMode _gameMode;
-    private LevelConfig _levelConfig;
-    private PlayerConfig _playerConfig;
-    private EnemySpawner _enemySpawner;
-    private CharactersFactory _characterFactory;
 
-    public GameplayCycle(LevelConfig levelConfig, PlayerConfig playerConfig, EnemySpawner enemySpawner, CharactersFactory characterFactory)
+    public GameplayCycle(GameMode gameMode)
     {
-        _levelConfig = levelConfig;
-        _playerConfig = playerConfig;
-        _enemySpawner = enemySpawner;
-        _characterFactory = characterFactory;
+        _gameMode = gameMode;
 
         Prepare();
     }
@@ -31,9 +24,6 @@ public class GameplayCycle : IDisposable
 
     private void Prepare()
     {
-        Player player = _characterFactory.CreatePlayer(_playerConfig, _levelConfig.PlayerStartPosition);
-
-        _gameMode = new GameMode(_levelConfig, _enemySpawner, player);
         _gameMode.Start();
 
         _gameMode.Win += OnGameModeWin;
